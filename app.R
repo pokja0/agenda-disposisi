@@ -7,7 +7,13 @@ library(echarts4r)
 library(waiter)
 
 data_agenda_disposisi <- gsheet2tbl("https://docs.google.com/spreadsheets/d/1jRKoTyefw0bMn2ob_Jwkr9Ha_wfws0zhTElhbxqecO8/edit")
-data_agenda_disposisi <- as.data.frame(data_agenda_disposisi)
+
+colnames(data_agenda_disposisi) <- c("no","tanggal_naskah",  "nomor_naskah", "asal_naskah", "hal", 
+                                     "isi_ringkas_surat", "tim_kerja_terkait", "link_zoom_meeting", 
+                                     "tanggal_pelaksanaan", "jam", "keterangan_disposisi", "penerima_disposisi",
+                                     "email_penerima_disposisi", "timkerja_penerima_disposisi", 
+                                     "kehadiran_penerima_disposisi", "notulen_penerima_disposisi")
+
 ui <- dashboardPage(
   preloader = list(html = tagList(spin_1(), "Loading ..."), color = "#343a40"),
   dashboardHeader(title = "Agenda & Disposisi"),
@@ -32,7 +38,7 @@ ui <- dashboardPage(
           tabName = "tab1",
           bs4Card(width = 3,
             title = "",
-            pickerInput("input_timker","Pilih Tim Kerja", choices=unique(data_agenda_disposisi$`TIMKERJA PENERIMA DISPOSISI`), options = list(`actions-box` = TRUE),multiple = T),
+            pickerInput("input_timker","Pilih Tim Kerja", choices=unique(data_agenda_disposisi$timkerja_penerima_disposisi), options = list(`actions-box` = TRUE),multiple = T),
             input_task_button(
               id = "task_cari",
               label = "Cari Data",
@@ -51,7 +57,7 @@ ui <- dashboardPage(
           tabName = "tab2",
           bs4Card(width = 3,
                   title = "",
-                  pickerInput("input_pegawai","Pilih Pegawai", choices=unique(data_agenda_disposisi$`PENERIMA DISPOSISI`), options = list(`actions-box` = TRUE),multiple = T),
+                  pickerInput("input_pegawai","Pilih Pegawai", choices=unique(data_agenda_disposisi$penerima_disposisi), options = list(`actions-box` = TRUE),multiple = T),
                   input_task_button(
                     id = "task_cari_pegawai",
                     label = "Cari Data",
@@ -83,7 +89,7 @@ server <- function(input, output) {
     req(data_filtered_input()) # Pastikan input dikunci ada
     
     # Menggunakan fsubset() dari collapse
-    fsubset(data_agenda_disposisi, `TIMKERJA PENERIMA DISPOSISI` %in% data_filtered_input())
+    fsubset(data_agenda_disposisi, timkerja_penerima_disposisi %in% data_filtered_input())
   })
   
   # --- GRAFIK KEHADIRAN (Interaktif & Warna Berbeda) ---
@@ -91,14 +97,14 @@ server <- function(input, output) {
     
     # Manipulasi Data dengan 'collapse'
     kehadiran_summary <- data_filtered() |>
-      fgroup_by(`TIMKERJA PENERIMA DISPOSISI`, `KEHADIRAN PENERIMA DISPOSISI`) |>
+      fgroup_by(timkerja_penerima_disposisi, kehadiran_penerima_disposisi) |>
       fsummarise(
-        Jumlah = length(`KEHADIRAN PENERIMA DISPOSISI`)
+        Jumlah = length(kehadiran_penerima_disposisi)
       )
     
     kehadiran_summary |>
-      group_by(`KEHADIRAN PENERIMA DISPOSISI`) |> # Grouping by Kehadiran to create the stack
-      e_charts(`TIMKERJA PENERIMA DISPOSISI`) |>
+      group_by(kehadiran_penerima_disposisi) |> # Grouping by Kehadiran to create the stack
+      e_charts(timkerja_penerima_disposisi) |>
       e_bar(Jumlah, stack = "stack", legend = TRUE) |>
      # e_title("Kehadiran Penerima Disposisi per Tim Kerja") |>
       e_tooltip(trigger = "axis") |>
@@ -119,7 +125,7 @@ server <- function(input, output) {
     req(data_filtered_input_pegawai()) # Pastikan input dikunci ada
     
     # Menggunakan fsubset() dari collapse
-    fsubset(data_agenda_disposisi, `PENERIMA DISPOSISI` %in% data_filtered_input_pegawai())
+    fsubset(data_agenda_disposisi, penerima_disposisi %in% data_filtered_input_pegawai())
   })
   
   # --- GRAFIK KEHADIRAN (Interaktif & Warna Berbeda) ---
@@ -127,14 +133,14 @@ server <- function(input, output) {
     
     # Manipulasi Data dengan 'collapse'
     kehadiran_summary <- data_filtered_pegawai() |>
-      fgroup_by(`PENERIMA DISPOSISI`, `KEHADIRAN PENERIMA DISPOSISI`) |>
+      fgroup_by(penerima_disposisi, kehadiran_penerima_disposisi) |>
       fsummarise(
-        Jumlah = length(`KEHADIRAN PENERIMA DISPOSISI`)
+        Jumlah = length(kehadiran_penerima_disposisi)
       )
     
     kehadiran_summary |>
-      group_by(`KEHADIRAN PENERIMA DISPOSISI`) |> # Grouping by Kehadiran to create the stack
-      e_charts(`PENERIMA DISPOSISI`) |>
+      group_by(kehadiran_penerima_disposisi) |> # Grouping by Kehadiran to create the stack
+      e_charts(penerima_disposisi) |>
       e_bar(Jumlah, stack = "stack", legend = TRUE) |>
      # e_title("Kehadiran Penerima Disposisi per Tim Kerja") |>
       e_tooltip(trigger = "axis") |>
