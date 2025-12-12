@@ -7,7 +7,7 @@ library(echarts4r)
 library(waiter)
 
 data_agenda_disposisi <- gsheet2tbl("https://docs.google.com/spreadsheets/d/1jRKoTyefw0bMn2ob_Jwkr9Ha_wfws0zhTElhbxqecO8/edit")
-
+data_agenda_disposisi <- as.data.frame(data_agenda_disposisi)
 ui <- dashboardPage(
   preloader = list(html = tagList(spin_1(), "Loading ..."), color = "#343a40"),
   dashboardHeader(title = "Agenda & Disposisi"),
