@@ -5,6 +5,10 @@ library(bslib)
 library(collapse)
 library(echarts4r)
 library(waiter)
+library(toastui)
+library(dplyr)
+library(anytime) # Digunakan untuk konversi tanggal/waktu
+library(janitor) # Digunakan untuk membersihkan nama kolom
 
 data_agenda_disposisi <- gsheet2tbl("https://docs.google.com/spreadsheets/d/1jRKoTyefw0bMn2ob_Jwkr9Ha_wfws0zhTElhbxqecO8/edit")
 
@@ -13,6 +17,56 @@ colnames(data_agenda_disposisi) <- c("no","tanggal_naskah",  "nomor_naskah", "as
                                      "tanggal_pelaksanaan", "jam", "keterangan_disposisi", "penerima_disposisi",
                                      "email_penerima_disposisi", "timkerja_penerima_disposisi", 
                                      "kehadiran_penerima_disposisi", "notulen_penerima_disposisi")
+
+data_toastui_dplyr <- data_agenda_disposisi |>
+  # Membersihkan nama kolom agar sesuai dengan standar R (huruf kecil, tanpa spasi)
+  clean_names() |>
+  
+  # --- 2. Mengubah Tipe Data dan Memformat Kolom Waktu/Data Baru ---
+  mutate(
+    # Konversi kolom tanggal dan waktu menjadi tipe datetime
+    # anytime() sangat fleksibel untuk menangani format yang berbeda
+    tanggal_mulai = anytime(tanggal_pelaksanaan),
+    tanggal_selesai = anytime(tanggal_pelaksanaan),
+    
+    # 3. Membuat Kolom Baru untuk Toast UI Calendar
+    
+    # id: Membuat ID unik berdasarkan nomor baris
+    id = row_number() |> as.character(),
+    
+    # calendarId: Menggunakan 'timkerja_penerima_disposisi' untuk pengelompokan
+    calendarId = timkerja_penerima_disposisi,
+    
+    # title: Menggunakan 'isi_ringkas_surat'
+    title = isi_ringkas_surat,
+    
+    # start & end: Memformat waktu ke dalam string ISO 8601 (YYYY-MM-DDTHH:MM:SS)
+    # Ini adalah format standar yang diterima oleh Toast UI Calendar
+    start = format(tanggal_mulai, "%Y-%m-%dT%H:%M:%S"),
+    end = format(tanggal_selesai, "%Y-%m-%dT%H:%M:%S"),
+    
+    # isAllDay: Atur ke FALSE (karena ada waktu spesifik)
+    isAllDay = FALSE,
+    
+    # category: Atur ke 'time' (karena ada waktu spesifik)
+    category = 'time',
+    
+    # location: Menggunakan 'link_zoom_meeting' (opsional)
+    location = link_zoom_meeting
+  ) |>
+  
+  # --- 4. Memilih dan Mengatur Ulang Urutan Kolom Akhir ---
+  select(
+    id,
+    calendarId,
+    title,
+    start,
+    end,
+    isAllDay,
+    category,
+    location
+    # Anda dapat menambahkan kolom lain yang dibutuhkan Toast UI di sini
+  )
 
 ui <- dashboardPage(
   preloader = list(html = tagList(spin_1(), "Loading ..."), color = "#343a40"),
@@ -51,7 +105,9 @@ ui <- dashboardPage(
           bs4Card(width = 12,
             title = "Kehadiran Penerima Disposisi per Tim Kerja",
             echarts4rOutput("kehadiranPlot")
-          )
+          ),
+          h5("Jadwal Agenda Kegiatan", style="text-align: center;"),
+          calendarOutput("kalender")
         ),
         tabItem(
           tabName = "tab2",
@@ -147,6 +203,15 @@ server <- function(input, output) {
       e_grid(left = '25%') |>
       e_flip_coords()
     
+  })
+  
+  output$kalender <- renderCalendar({
+    calendar(data_toastui_dplyr, navigation = TRUE, defaultDate = Sys.Date()) %>%
+      cal_month_options(
+        startDayOfWeek  = 1, 
+        narrowWeekend = TRUE
+      ) %>% 
+      cal_props(cal_demo_props())
   })
 }
 
