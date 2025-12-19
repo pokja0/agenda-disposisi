@@ -351,16 +351,16 @@ server <- function(input, output) {
           tanggal_selesai = format(tanggal_selesai, "%Y-%m-%d %H:%M:%S")
         ) |>
         fselect(tanggal_naskah, nomor_naskah, asal_naskah, hal, link_zoom_meeting, tanggal_mulai, tanggal_selesai, timkerja_penerima_disposisi, kehadiran_penerima_disposisi, notulen_penerima_disposisi) |>
-        frename(tanggal_naskah = `Tanggal Naskah`,
-                nomor_naskah = `Nomor Naskah`,
-                asal_naskah = `Asal Naskah`,
-                hal = Hal,
-                link_zoom_meeting = `Link Zoom Meeting`,
-                tanggal_mulai, `Tanggal Mulai`,
-                tanggal_selesai, `Tanggal Selesai`,
-                timkerja_penerima_disposisi = `Tim Kerja Penerima Disposisi`,
-                kehadiran_penerima_disposisi, `Status Kehadiran`,
-                notulen_penerima_disposisi = Notulen), 
+        frename(`Tanggal Naskah` = tanggal_naskah,
+                `Nomor Naskah` = nomor_naskah,
+                `Asal Naskah` = asal_naskah,
+                 Hal = hal,
+                `Link Zoom Meeting` = link_zoom_meeting,
+                `Tanggal Mulai` = tanggal_mulai,
+                `Tanggal Selesai` = tanggal_selesai,
+                `Tim Kerja Penerima Disposisi` = timkerja_penerima_disposisi,
+                `Status Kehadiran` = kehadiran_penerima_disposisi,
+                Notulen = notulen_penerima_disposisi), 
       filterable = TRUE, 
       minRows = 10
       )
