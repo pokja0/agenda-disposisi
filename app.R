@@ -104,7 +104,7 @@ ui <- dashboardPage(
             tabPanel(
               "Tabel",
               card(min_height = "2000px",
-                tableOutput("kehadiran_tabel"), full_screen = T
+                reactableOutput("kehadiran_tabel"), full_screen = T
               )
             )
           ),
@@ -264,7 +264,7 @@ server <- function(input, output) {
       e_theme("westeros") # Tambahkan tema untuk konsistensi
   })
   
-  output$kehadiran_tabel <- renderTable({
+  output$kehadiran_tabel <- renderReactable({
     # Manipulasi Data dengan 'collapse'
     kehadiran_summary <- data_filtered() |>
       fgroup_by(timkerja_penerima_disposisi, kehadiran_penerima_disposisi) |>
@@ -272,10 +272,12 @@ server <- function(input, output) {
         Jumlah = length(kehadiran_penerima_disposisi)
       )
     
-    pivot(kehadiran_summary, ids = "timkerja_penerima_disposisi", values = "Jumlah", 
-          names = "kehadiran_penerima_disposisi", how = "wider", fill = 0) |>
-      frename(`TIM KERJA` = timkerja_penerima_disposisi) |>
-      colorder(`TIM KERJA`, HADIR, `TANPA KETERANGAN`, `TIDAK HADIR`)
+   reactable(
+     pivot(kehadiran_summary, ids = "timkerja_penerima_disposisi", values = "Jumlah", 
+           names = "kehadiran_penerima_disposisi", how = "wider", fill = 0) |>
+       frename(`TIM KERJA` = timkerja_penerima_disposisi) |>
+       colorder(`TIM KERJA`, HADIR, `TANPA KETERANGAN`, `TIDAK HADIR`)
+   )
     
   })
   ##PEGAWAI
