@@ -103,7 +103,7 @@ ui <- dashboardPage(
             ),
             tabPanel(
               "Tabel",
-              card(min_height = "2000px",
+              card(
                 reactableOutput("kehadiran_tabel"), full_screen = T
               )
             )
