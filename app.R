@@ -276,7 +276,8 @@ server <- function(input, output) {
      pivot(kehadiran_summary, ids = "timkerja_penerima_disposisi", values = "Jumlah", 
            names = "kehadiran_penerima_disposisi", how = "wider", fill = 0) |>
        frename(`TIM KERJA` = timkerja_penerima_disposisi) |>
-       colorder(`TIM KERJA`, HADIR, `TANPA KETERANGAN`, `TIDAK HADIR`)
+       fmutate(`TOTAL DISPOSISI` = sum(HADIR, `TANPA KETERANGAN`, `TIDAK HADIR`)) |>
+       colorder(`TIM KERJA`,`TOTAL DISPOSISI`, HADIR, `TANPA KETERANGAN`, `TIDAK HADIR`)
    )
     
   })
