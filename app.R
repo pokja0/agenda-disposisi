@@ -53,6 +53,14 @@ data_toastui_dplyr <- data_agenda_disposisi |>
   ) |>
   select(id, calendarId, title, start, end, isAllDay, category, location, body)
 
+csvDownloadButton <- function(id, filename = "data.csv", label = "Unduh Data (CSV") {
+  tags$button(
+    tagList(icon("download"), label),
+    onclick = sprintf("Reactable.downloadDataCSV('%s', '%s')", id, filename)
+  )
+}
+
+
 ui <- dashboardPage(
   preloader = list(html = tagList(spin_1(), "Loading ..."), color = "#343a40"),
   dashboardHeader(title = "Agenda & Disposisi"),
@@ -63,11 +71,11 @@ ui <- dashboardPage(
         text = "Tim Kerja",
         tabName = "tab1",
         icon = icon("van-shuttle")
-      ),
-      menuItem(
-        text = "Individu",
-        tabName = "tab2"
-      )
+      )#,
+      # menuItem(
+      #   text = "Individu",
+      #   tabName = "tab2"
+      # )
     )
   ),
   dashboardBody(
@@ -104,6 +112,15 @@ ui <- dashboardPage(
             tabPanel(
               "Tabel",
               card(
+                layout_column_wrap(
+                  csvDownloadButton("kehadiran_tabel", filename = "kehadiran_timker.csv"),
+                  "",
+                  "",
+                  "",
+                  "",
+                  ""
+                ),
+                br(),
                 reactableOutput("kehadiran_tabel"), full_screen = T
               )
             )
@@ -276,6 +293,7 @@ server <- function(input, output) {
      pivot(kehadiran_summary, ids = "timkerja_penerima_disposisi", values = "Jumlah", 
            names = "kehadiran_penerima_disposisi", how = "wider", fill = 0) |>
        frename(`TIM KERJA` = timkerja_penerima_disposisi) |>
+       fgroup_by(`TIM KERJA`) |>
        fmutate(`TOTAL DISPOSISI` = sum(HADIR, `TANPA KETERANGAN`, `TIDAK HADIR`)) |>
        colorder(`TIM KERJA`,`TOTAL DISPOSISI`, HADIR, `TANPA KETERANGAN`, `TIDAK HADIR`)
    )
